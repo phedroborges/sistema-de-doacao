@@ -17,6 +17,7 @@ import {
   criarParticipante,
   criarPremio,
   dadosNovoEvento,
+  definirCadastroSorteio,
   excluirCampo,
   excluirParticipante,
   excluirPremio,
@@ -280,6 +281,16 @@ export async function excluirCampoAction(eventoId: string, id: string) {
   await excluirCampo(id);
   revalidatePath(`/admin/eventos/${eventoId}`);
   redirect(`/admin/eventos/${eventoId}?salvo=campo#formulario`);
+}
+
+export async function definirCadastroSorteioAction(
+  eventoId: string,
+  id: string,
+  cadastrado: boolean,
+) {
+  await exigirAdmin();
+  await definirCadastroSorteio(eventoId, id, cadastrado);
+  revalidatePath(`/admin/eventos/${eventoId}/cadastro-presencial`);
 }
 
 export async function sairAction() {

@@ -9,6 +9,7 @@ import type {
   DadosParticipante,
   DadosPremio,
   Doacao,
+  InscricaoSorteio,
   Evento,
   EventoPublico,
   Participante,
@@ -218,6 +219,16 @@ function mapearDoacao(linha: Linha): Doacao {
     criadoEm: texto(linha.created_at),
     confirmadoEm: linha.confirmed_at ? texto(linha.confirmed_at) : null,
     compartilhadoEm: linha.shared_at ? texto(linha.shared_at) : null,
+  };
+}
+
+function mapearInscricaoSorteio(linha: Linha): InscricaoSorteio {
+  return {
+    id: texto(linha.id),
+    eventoId: texto(linha.event_id),
+    nome: texto(linha.name),
+    telefone: texto(linha.phone),
+    cadastradoEm: linha.registered_at ? texto(linha.registered_at) : null,
   };
 }
 
@@ -607,6 +618,64 @@ export async function resumoDoacoesEvento(eventoId: string): Promise<{ total: nu
   exigirSemErro(todas.error, "Não foi possível contar as doações");
   exigirSemErro(confirmadas.error, "Não foi possível contar as doações confirmadas");
   return { total: todas.count ?? 0, confirmadas: confirmadas.count ?? 0 };
+}
+
+export async function listarInscricoesSorteio(
+  eventoId: string,
+  { busca = "", situacao = "todos" }: { busca?: string; situacao?: string } = {},
+): Promise<InscricaoSorteio[]> {
+  const supabase = await criarClienteSupabaseServidor();
+  let consulta = supabase
+    .from("raffle_entries")
+    .select("id,event_id,source_key,name,phone,registered_at")
+    .eq("event_id", eventoId);
+
+  const termo = busca.trim();
+  if (termo) {
+    const nome = termo.replace(/[,()*\\%]/g, " ").trim();
+    const telefone = termo.replace(/\D/g, "");
+    const filtros: string[] = [];
+    if (nome) filtros.push(`name.ilike.%${nome}%`);
+    if (telefone.length >= 3) filtros.push(`phone.ilike.%${telefone}%`);
+    if (filtros.length) consulta = consulta.or(filtros.join(","));
+  }
+  if (situacao === "pendentes") consulta = consulta.is("registered_at", null);
+  if (situacao === "cadastrados") consulta = consulta.not("registered_at", "is", null);
+
+  const { data, error } = await consulta.order("name").order("source_key");
+  exigirSemErro(error, "Não foi possível listar o cadastro presencial");
+  return ((data ?? []) as Linha[]).map(mapearInscricaoSorteio);
+}
+
+export async function resumoInscricoesSorteio(
+  eventoId: string,
+): Promise<{ total: number; cadastrados: number }> {
+  const supabase = await criarClienteSupabaseServidor();
+  const base = () => supabase
+    .from("raffle_entries")
+    .select("id", { head: true, count: "exact" })
+    .eq("event_id", eventoId);
+  const [todas, cadastradas] = await Promise.all([
+    base(),
+    base().not("registered_at", "is", null),
+  ]);
+  exigirSemErro(todas.error, "Não foi possível contar a lista presencial");
+  exigirSemErro(cadastradas.error, "Não foi possível contar os cadastros presenciais");
+  return { total: todas.count ?? 0, cadastrados: cadastradas.count ?? 0 };
+}
+
+export async function definirCadastroSorteio(
+  eventoId: string,
+  id: string,
+  cadastrado: boolean,
+): Promise<void> {
+  const supabase = await criarClienteSupabaseServidor();
+  const { error } = await supabase
+    .from("raffle_entries")
+    .update({ registered_at: cadastrado ? agoraIso() : null })
+    .eq("id", id)
+    .eq("event_id", eventoId);
+  exigirSemErro(error, "Não foi possível atualizar o cadastro presencial");
 }
 
 export async function contarDoacoesEvento(eventoId: string): Promise<number> {

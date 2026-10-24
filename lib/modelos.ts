@@ -110,6 +110,14 @@ export type Doacao = {
   compartilhadoEm: string | null;
 };
 
+export type InscricaoSorteio = {
+  id: string;
+  eventoId: string;
+  nome: string;
+  telefone: string;
+  cadastradoEm: string | null;
+};
+
 export type LinhaRanking = {
   participanteId: string;
   nome: string;

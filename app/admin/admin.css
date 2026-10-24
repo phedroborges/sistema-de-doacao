@@ -146,3 +146,21 @@
 
 .admin-paginacao { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
 .admin-paginacao span { color: rgba(44, 0, 32, .62); font-size: 14px; font-weight: 700; }
+
+/* --- Checklist do cadastro presencial --- */
+.admin-progresso-cabecalho { align-items: center; display: flex; justify-content: space-between; margin-bottom: 8px; }
+.admin-progresso-cabecalho strong { color: #2c0020; font-size: 15px; }
+.admin-progresso-cabecalho span { color: rgba(44, 0, 32, .62); font-size: 13px; font-weight: 700; }
+.admin-progresso { background: rgba(145, 0, 229, .12); border-radius: 999px; height: 10px; overflow: hidden; }
+.admin-progresso span { background: linear-gradient(90deg, #9100e5, #ff0197); border-radius: inherit; display: block; height: 100%; transition: width .2s ease; }
+.admin-filtros-cadastro { margin: 22px 0 16px; }
+.admin-filtros-cadastro select { min-width: 160px; }
+.admin-tabela-cadastro th:first-child, .admin-tabela-cadastro td:first-child { text-align: center; width: 76px; }
+.admin-tabela-cadastro tr[data-cadastrado="true"] { background: #f1faef; }
+.admin-tabela-cadastro tr[data-cadastrado="true"] td { color: rgba(44, 0, 32, .58); }
+.admin-tabela-cadastro tr[data-cadastrado="true"] td:nth-child(2) { text-decoration: line-through; }
+.admin-check-cadastro { align-items: center; appearance: none; background: #fff; border: 2px solid rgba(44, 0, 32, .28); border-radius: 7px; color: #fff; cursor: pointer; display: inline-flex; font-size: 18px; font-weight: 900; height: 30px; justify-content: center; line-height: 1; padding: 0; width: 30px; }
+.admin-check-cadastro:hover { border-color: #9100e5; }
+.admin-check-cadastro[aria-pressed="true"] { background: #218838; border-color: #218838; }
+.admin-check-cadastro:focus-visible { outline: 3px solid rgba(145, 0, 229, .3); outline-offset: 2px; }
+.admin-sem-telefone { color: rgba(44, 0, 32, .48); font-style: italic; }

@@ -94,6 +94,9 @@ export default async function EditarEvento({
           <a className="admin-botao" href={`/api/admin/eventos/${evento.id}/exportar`}>
             Exportar doações CSV
           </a>
+          <Link className="admin-botao primario" href={`/admin/eventos/${evento.id}/cadastro-presencial`}>
+            Cadastro presencial
+          </Link>
         </div>
       </div>
 
