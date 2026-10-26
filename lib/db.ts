@@ -735,8 +735,16 @@ export async function calcularRanking(eventoId?: string): Promise<Ranking | null
   if (!evento) return null;
   const eventoBase = "participantes" in evento ? evento : await completarEvento(evento, true);
   const supabase = await criarClienteSupabaseServidor();
-  const { data, error } = await supabase.rpc("get_event_ranking", { p_event_id: eventoBase.id });
+  const [{ data, error }, resumoFinanceiro] = await Promise.all([
+    supabase.rpc("get_event_ranking", { p_event_id: eventoBase.id }),
+    supabase
+      .from("event_financial_reconciliations")
+      .select("verified_transfers,athletics_total,unattributed_transfers,store_clients,vizantu,emporio_vint3,official_total")
+      .eq("event_id", eventoBase.id)
+      .maybeSingle(),
+  ]);
   exigirSemErro(error, "Não foi possível calcular o ranking");
+  exigirSemErro(resumoFinanceiro.error, "Não foi possível buscar o resumo geral");
   if (!data) return null;
   const resultado = data as { rows?: Linha[]; donations?: unknown; weight_kg?: unknown; amount?: unknown };
   const linhas = (resultado.rows ?? []).map((linha) => {
@@ -767,6 +775,15 @@ export async function calcularRanking(eventoId?: string): Promise<Ranking | null
     totalReais: Math.round(numero(resultado.amount) * 100) / 100,
     doacoes: numero(resultado.donations),
     participantesNaMeta: linhas.filter((linha) => linha.bateuMeta).length,
+    resumoGeral: resumoFinanceiro.data ? {
+      transferenciasVerificadas: numero(resumoFinanceiro.data.verified_transfers),
+      totalAtleticas: numero(resumoFinanceiro.data.athletics_total),
+      transferenciasSemAtletica: numero(resumoFinanceiro.data.unattributed_transfers),
+      clientesLoja: numero(resumoFinanceiro.data.store_clients),
+      vizantu: numero(resumoFinanceiro.data.vizantu),
+      emporioVint3: numero(resumoFinanceiro.data.emporio_vint3),
+      totalGeral: numero(resumoFinanceiro.data.official_total),
+    } : null,
     atualizadoEm: agoraIso(),
   };
 }

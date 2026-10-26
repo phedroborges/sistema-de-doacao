@@ -1489,6 +1489,40 @@ body {
   line-height: 1.2;
 }
 
+.fontes-geral {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 1vw, 14px);
+}
+.fontes-geral article {
+  background: var(--cartao);
+  border-radius: var(--raio);
+  box-shadow: 0 4px 0 rgba(44, 0, 32, 0.16);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(10px, 1.1vw, 16px) clamp(12px, 1.4vw, 22px);
+}
+.fontes-geral span {
+  color: var(--tinta-3);
+  font-size: clamp(10px, .85vw, 14px);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.fontes-geral strong {
+  color: var(--ameixa);
+  font: 400 clamp(25px, 2.6vw, 46px) / 1 var(--display);
+  white-space: nowrap;
+}
+.fontes-geral small {
+  color: var(--tinta-2);
+  font-size: clamp(10px, .8vw, 13px);
+  line-height: 1.25;
+}
+.painel-cabeca .nota strong { color: var(--rosa-escuro); }
+
 /* --- 4 da hierarquia: as outras métricas, numa faixa fina --- */
 
 .metricas {
@@ -2174,6 +2208,18 @@ details.ver-tabela > div {
   }
   .hero-total {
     padding: 10px clamp(14px, 1.6vw, 24px);
+  }
+  .fontes-geral {
+    gap: 7px;
+  }
+  .fontes-geral article {
+    padding: 7px 12px;
+  }
+  .fontes-geral strong {
+    font-size: clamp(21px, 2vw, 32px);
+  }
+  .fontes-geral small {
+    font-size: 10px;
   }
   .premio {
     padding: 10px clamp(16px, 2vw, 28px);

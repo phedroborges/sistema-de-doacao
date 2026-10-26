@@ -139,6 +139,16 @@ export type ConciliacaoEvento = {
   ranking: ResultadoParticipanteConciliado[];
 };
 
+export type ResumoFinanceiroPublico = {
+  transferenciasVerificadas: number;
+  totalAtleticas: number;
+  transferenciasSemAtletica: number;
+  clientesLoja: number;
+  vizantu: number;
+  emporioVint3: number;
+  totalGeral: number;
+};
+
 export type LinhaRanking = {
   participanteId: string;
   nome: string;
@@ -176,6 +186,7 @@ export type Ranking = {
   totalReais: number;
   doacoes: number;
   participantesNaMeta: number;
+  resumoGeral: ResumoFinanceiroPublico | null;
   atualizadoEm: string;
 };
 

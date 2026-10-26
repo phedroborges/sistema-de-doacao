@@ -141,6 +141,7 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
 
   const lider = ranking.linhas[0];
   const temDisputa = Boolean(lider && ranking.totalKg > 0);
+  const resumo = ranking.resumoGeral;
 
   const destaque = ranking.linhas.slice(0, LUGARES_EM_DESTAQUE);
   const restante = ranking.linhas.slice(LUGARES_EM_DESTAQUE);
@@ -183,9 +184,9 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
       <section className="topo-jogo">
         <div className="hero-total">
           <div className="hero-total-texto">
-            <span>Ração arrecadada</span>
-            <strong>{kg(ranking.totalKg)}</strong>
-            <small>{ranking.doacoes} {ranking.doacoes === 1 ? "doação" : "doações"} · {ranking.participantesNaMeta} de {ranking.linhas.length} na meta</small>
+            <span>{resumo ? "Total geral arrecadado" : "Ração arrecadada"}</span>
+            <strong>{resumo ? reais(resumo.totalGeral) : kg(ranking.totalKg)}</strong>
+            <small>{resumo ? "Loja, evento e apoios confirmados" : `${ranking.doacoes} ${ranking.doacoes === 1 ? "doação" : "doações"} · ${ranking.participantesNaMeta} de ${ranking.linhas.length} na meta`}</small>
           </div>
           {temQr && (
             <div className="hero-qr">
@@ -194,7 +195,30 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
             </div>
           )}
         </div>
-        {ranking.evento.premioCompeticaoTitulo && (
+        {resumo ? (
+          <div className="fontes-geral" aria-label="Composição do total arrecadado">
+            <article>
+              <span>Evento e transferências</span>
+              <strong>{reais(resumo.transferenciasVerificadas)}</strong>
+              <small>{reais(resumo.totalAtleticas)} das atléticas · {reais(resumo.transferenciasSemAtletica)} sem atribuição</small>
+            </article>
+            <article>
+              <span>Clientes da loja</span>
+              <strong>{reais(resumo.clientesLoja)}</strong>
+              <small>Doações presenciais na Casa Caramelo</small>
+            </article>
+            <article>
+              <span>Vizantu</span>
+              <strong>{reais(resumo.vizantu)}</strong>
+              <small>Apoio confirmado</small>
+            </article>
+            <article>
+              <span>Empório Vint3</span>
+              <strong>{reais(resumo.emporioVint3)}</strong>
+              <small>Apoio confirmado</small>
+            </article>
+          </div>
+        ) : ranking.evento.premioCompeticaoTitulo && (
           <div className="premio">
             <Trofeu className="premio-trofeu" />
             <div className="premio-texto"><h2>{ranking.evento.premioCompeticaoTitulo}</h2><p>{ranking.evento.premioCompeticaoDescricao}</p></div>
@@ -206,8 +230,8 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
       {destaque.length > 0 && (
         <section className="painel painel-corrida">
           <div className="painel-cabeca">
-            <h2>{restante.length > 0 ? `Top ${destaque.length} da corrida` : "A corrida até as metas"}</h2>
-            <span className="nota">O anel fecha quando a {ranking.evento.participanteSingular} bate a meta.</span>
+            <h2>{resumo ? "Ranking oficial das atléticas" : restante.length > 0 ? `Top ${destaque.length} da corrida` : "A corrida até as metas"}</h2>
+            <span className="nota">{resumo && lider ? <>Campeã: <strong>{lider.nome}</strong> · {reais(lider.reais)}</> : <>O anel fecha quando a {ranking.evento.participanteSingular} bate a meta.</>}</span>
           </div>
           <ul className="corrida">
             {destaque.map((linha, indice) => (
@@ -268,8 +292,13 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
       )}
 
       <section className="metricas">
-        <div><span>Doações</span><strong>{ranking.doacoes}</strong></div>
-        {ranking.linhas.length > 0 ? (
+        <div><span>Doações válidas no app</span><strong>{ranking.doacoes}</strong></div>
+        {resumo ? (
+          <>
+            <div><span>Total das atléticas</span><strong>{reais(resumo.totalAtleticas)}</strong></div>
+            <div><span>Peso equivalente</span><strong>{kg(ranking.totalKg)}</strong></div>
+          </>
+        ) : ranking.linhas.length > 0 ? (
           <>
             <div><span>{ranking.evento.participantePlural} na meta</span><strong>{ranking.participantesNaMeta}/{ranking.linhas.length}</strong></div>
             <div><span>Média por {ranking.evento.participanteSingular}</span><strong>{kg(ranking.totalKg / ranking.linhas.length)}</strong></div>
@@ -277,7 +306,7 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
         ) : (
           <div><span>Peso equivalente</span><strong>{kg(ranking.totalKg)}</strong></div>
         )}
-        <div><span>Arrecadado em PIX</span><strong>{reais(ranking.totalReais)}</strong></div>
+        <div><span>Transferências verificadas</span><strong>{reais(ranking.totalReais)}</strong></div>
       </section>
       <p className="rodape"><a href={`/evento/${ranking.evento.slug}`}>Fazer uma doação →</a></p>
 
