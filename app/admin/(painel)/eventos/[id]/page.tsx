@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BotaoExcluir } from "@/app/admin/BotaoExcluir";
-import { buscarEventoCompletoPorId, listarDoacoesPainel, resumoDoacoesEvento } from "@/lib/db";
+import { buscarConciliacaoEvento, buscarEventoCompletoPorId, listarDoacoesPainel, resumoDoacoesEvento } from "@/lib/db";
 import { formatarTelefone } from "@/lib/telefone";
 import {
   atualizarCampoAction,
@@ -64,9 +64,10 @@ export default async function EditarEvento({
   const evento = await buscarEventoCompletoPorId(id);
   if (!evento) notFound();
   const paginaAtual = Math.max(1, Number(pagina) || 1);
-  const [resumo, listagem] = await Promise.all([
+  const [resumo, listagem, conciliacao] = await Promise.all([
     resumoDoacoesEvento(evento.id),
     listarDoacoesPainel(evento.id, { busca, pagina: paginaAtual, porPagina: POR_PAGINA }),
+    buscarConciliacaoEvento(evento.id, evento.participantes.map((participante) => participante.id)),
   ]);
   const doacoes = resumo.total;
   const naoConfirmadas = resumo.total - resumo.confirmadas;
@@ -101,6 +102,74 @@ export default async function EditarEvento({
       </div>
 
       {salvo && <p className="admin-alerta sucesso">Alterações salvas com sucesso.</p>}
+
+      {conciliacao && (
+        <section className="admin-card admin-bloco admin-conciliacao">
+          <div className="admin-secao-titulo">
+            <div>
+              <span className="admin-kicker">Conciliação oficial</span>
+              <h2>Valores válidos da campanha</h2>
+              <p>Extrato bancário conferido e doações externas informadas pela Casa Caramelo.</p>
+            </div>
+            <div className="admin-total-oficial">
+              <span>Total geral</span>
+              <strong>{reais(conciliacao.totalGeral)}</strong>
+            </div>
+          </div>
+
+          <div className="admin-grade-conciliacao">
+            <article>
+              <span>Transferências verificadas</span>
+              <strong>{reais(conciliacao.transferenciasVerificadas)}</strong>
+              <small>{reais(conciliacao.totalAtleticas)} ligados às atléticas · {reais(conciliacao.transferenciasSemAtletica)} sem atribuição</small>
+            </article>
+            <article>
+              <span>Clientes Casa Caramelo</span>
+              <strong>{reais(conciliacao.clientesLoja)}</strong>
+              <small>Doações feitas na loja, fora do aplicativo</small>
+            </article>
+            <article>
+              <span>Vizantu</span>
+              <strong>{reais(conciliacao.vizantu)}</strong>
+              <small>Valor já informado anteriormente</small>
+            </article>
+            <article>
+              <span>Empório Vint3</span>
+              <strong>{reais(conciliacao.emporioVint3)}</strong>
+              <small>Valor já informado anteriormente</small>
+            </article>
+          </div>
+
+          {conciliacao.ranking.length > 0 && (
+            <div className="admin-ranking-oficial">
+              <div className="admin-vencedora">
+                <span>Atlética vencedora</span>
+                <strong>{nomeParticipante.get(conciliacao.ranking[0].participanteId) ?? "—"}</strong>
+                <b>{reais(conciliacao.ranking[0].valor)}</b>
+              </div>
+              <div className="admin-tabela-rolagem">
+                <table className="admin-tabela">
+                  <thead><tr><th scope="col">Posição</th><th scope="col">Atlética</th><th scope="col">Valor válido</th><th scope="col">Doações</th></tr></thead>
+                  <tbody>
+                    {conciliacao.ranking.map((resultado, indice) => (
+                      <tr key={resultado.participanteId}>
+                        <td>{indice + 1}º</td>
+                        <td>{nomeParticipante.get(resultado.participanteId) ?? "—"}</td>
+                        <td>{reais(resultado.valor)}</td>
+                        <td>{resultado.doacoes}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <p className="admin-nota-conciliacao">
+            Cálculo: {reais(conciliacao.transferenciasVerificadas)} em transferências + {reais(conciliacao.clientesLoja)} dos clientes da loja + {reais(conciliacao.vizantu)} da Vizantu + {reais(conciliacao.emporioVint3)} do Empório Vint3 = <strong>{reais(conciliacao.totalGeral)}</strong>.
+          </p>
+        </section>
+      )}
 
       <form action={atualizarEventoAction.bind(null, evento.id)} className="admin-card admin-form">
         <div className="admin-secao-titulo">

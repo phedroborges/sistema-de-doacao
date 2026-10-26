@@ -118,6 +118,27 @@ export type InscricaoSorteio = {
   cadastradoEm: string | null;
 };
 
+export type ResultadoParticipanteConciliado = {
+  participanteId: string;
+  valor: number;
+  pesoKg: number;
+  doacoes: number;
+};
+
+export type ConciliacaoEvento = {
+  eventoId: string;
+  transferenciasVerificadas: number;
+  totalAtleticas: number;
+  transferenciasSemAtletica: number;
+  clientesLoja: number;
+  vizantu: number;
+  emporioVint3: number;
+  totalGeral: number;
+  observacoes: string;
+  atualizadoEm: string;
+  ranking: ResultadoParticipanteConciliado[];
+};
+
 export type LinhaRanking = {
   participanteId: string;
   nome: string;

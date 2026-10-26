@@ -4,6 +4,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { criarClienteSupabaseServidor } from "./supabase/server";
 import type {
   CampoFormulario,
+  ConciliacaoEvento,
   DadosCampo,
   DadosEvento,
   DadosParticipante,
@@ -618,6 +619,50 @@ export async function resumoDoacoesEvento(eventoId: string): Promise<{ total: nu
   exigirSemErro(todas.error, "Não foi possível contar as doações");
   exigirSemErro(confirmadas.error, "Não foi possível contar as doações confirmadas");
   return { total: todas.count ?? 0, confirmadas: confirmadas.count ?? 0 };
+}
+
+export async function buscarConciliacaoEvento(
+  eventoId: string,
+  participanteIds: string[],
+): Promise<ConciliacaoEvento | null> {
+  const supabase = await criarClienteSupabaseServidor();
+  const [financeiro, resultados] = await Promise.all([
+    supabase
+      .from("event_financial_reconciliations")
+      .select("*")
+      .eq("event_id", eventoId)
+      .maybeSingle(),
+    participanteIds.length
+      ? supabase
+          .from("participant_reconciliations")
+          .select("participant_id,amount,weight_kg,donation_count")
+          .in("participant_id", participanteIds)
+          .order("amount", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  exigirSemErro(financeiro.error, "Não foi possível buscar a conciliação financeira");
+  exigirSemErro(resultados.error, "Não foi possível buscar o ranking conciliado");
+  if (!financeiro.data) return null;
+
+  const linha = financeiro.data as Linha;
+  return {
+    eventoId: texto(linha.event_id),
+    transferenciasVerificadas: numero(linha.verified_transfers),
+    totalAtleticas: numero(linha.athletics_total),
+    transferenciasSemAtletica: numero(linha.unattributed_transfers),
+    clientesLoja: numero(linha.store_clients),
+    vizantu: numero(linha.vizantu),
+    emporioVint3: numero(linha.emporio_vint3),
+    totalGeral: numero(linha.official_total),
+    observacoes: texto(linha.notes),
+    atualizadoEm: texto(linha.updated_at),
+    ranking: ((resultados.data ?? []) as Linha[]).map((resultado) => ({
+      participanteId: texto(resultado.participant_id),
+      valor: numero(resultado.amount),
+      pesoKg: numero(resultado.weight_kg),
+      doacoes: numero(resultado.donation_count),
+    })),
+  };
 }
 
 export async function listarInscricoesSorteio(
